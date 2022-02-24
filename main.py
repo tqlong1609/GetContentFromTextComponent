@@ -32,9 +32,9 @@ def formatStringNew(index, string, file):
             isCheck = False
         if isCheck == True:
             text+=string[element]
+    idFm = formatString(id)
     if text != '':
         textFm = formatString(text)
-        idFm = formatString(id)
         if index == 0:
             file.write(formatId(textFm) + '\n')
         else:
@@ -42,6 +42,8 @@ def formatStringNew(index, string, file):
                 file.write(formatTextNew(idFm, textFm) + ',\n')
             else:
                 file.write(formatTextNew(idFm, textFm) + '\n')
+    else:
+        file.write(formatTextNew(idFm, "") + '\n')
 
 def readFile(reader, fileWrite):
     line = reader.readline()
@@ -52,18 +54,18 @@ def readFile(reader, fileWrite):
             for i in range(3):
                 line = reader.readline()
                 id = formatStringNew(i, line, fileWrite)
-            fileWrite.write("  },\n".decode('utf-8'))
+            fileWrite.write("  },\n")
         line = reader.readline()
 
 if __name__ == '__main__':
     fileWrite = io.open('vi.json', 'w', encoding="utf-8")
-    fileWrite.write("{\n".decode('utf-8'))
+    fileWrite.write("{\n")
     for root, dirs, files in os.walk('./FolderJs', topdown=False):
         for name in files:
             file = os.path.join(root, name)
             reader = io.open(file, 'r', encoding="utf-8")
             readFile(reader, fileWrite)
             reader.close()
-    fileWrite.write("}".decode('utf-8'))
+    fileWrite.write("}")
     fileWrite.close()
 
