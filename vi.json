@@ -1,0 +1,18 @@
+{
+  "titleCart": {
+    "defaultMessage": "Giỏ hàng ({number})",
+    "description": "Title: Cart"
+  },
+  "emptyCart": {
+    "defaultMessage": "Giỏ hàng của bạn trống",
+    "description": "Empty cart"
+  },
+  "update": {
+    "defaultMessage": "Cập nhật",
+    "description": "Update"
+  },
+  "infoOrder": {
+    "defaultMessage": "Xem thông tin đơn hàng",
+    "description": "Info 123"
+  },
+}
