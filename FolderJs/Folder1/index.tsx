@@ -27,16 +27,18 @@ function Cart() {
           <SectionTitle
             // content={`Giỏ hàng (${list.length})`}
             content={
-              intl.formatMessage({
-                id: "titleCart",
-                defaultMessage: "Giỏ hàng ({number})",
-                description: "Title: Cart",
-              },
-                {
-                  number: `${list.length}`,
-                }
-              )}
-            showAllButton={false}
+              #{`Giỏ hàng(${number})`}
+              // intl.formatMessage({
+              //   id: "update",
+              //   defaultMessage: "Giỏ hàng ({param})",
+              //   description: "Update",
+              // },
+              //   {
+              //     param: number
+              //   }
+              // )
+            }
+          showAllButton={false}
           // customStyles={{ pt: { base: "1.5rem", md: "0" } }}
           />
           <Grid templateColumns="repeat(3, 1fr)" gap={6}>
@@ -53,20 +55,23 @@ function Cart() {
                   <Box alignItems="center" display="flex" flexDirection="column" >
                     <GiShoppingCart size="100px" color="#BABBBD" />
                     <Text fontWeight="bold" color="#BABBBD" fontSize="20px">
-                      {intl.formatMessage({
-                        id: "emptyCart",
-                        defaultMessage: "Giỏ hàng của bạn trống",
-                        description: "Empty cart",
-                      })}
+                      %{"Empty cart"}
+                      {/* {intl.formatMessage(
+                        {
+                          description: '',
+                          defaultMessage: 'Empty cart',
+                        }
+                      )} */}
                     </Text>
                     <Button
                       onClick={() => router.push('/')}
                       variant="outline" mt="10px" bg="#FFCB47" px="25px">
-                      {intl.formatMessage({
+                      %{"Cập nhật"}
+                      {/* {intl.formatMessage({
                         id: "update",
                         defaultMessage: "Cập nhật",
                         description: "Update",
-                      })}
+                      })} */}
                     </Button>
                   </Box>
                 </Center>}
@@ -74,7 +79,16 @@ function Cart() {
             <GridItem colSpan={{ base: 3, md: 1 }}>
               <CartInfo
                 showDetailCart={false}
-                errorMess={""}
+                errorMess={
+                  #{"chicken"}
+                }
+                // errorMess={
+                //   intl.formatMessage({
+                //     id: '',
+                //     defaultMessage: "chicken",
+                //     description: "",
+                //   })
+                // }
                 setErrorMess={() => { }}
               />
             </GridItem>

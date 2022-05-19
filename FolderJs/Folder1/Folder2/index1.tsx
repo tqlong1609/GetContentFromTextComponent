@@ -52,7 +52,7 @@ function ShippingAndPayment() {
   const emailRef = React.useRef<string | null>(null);
   const taxCodeRef = React.useRef<string | null>(null);
   const { dist: distStation, station } = useAppSelector(selectStation);
-
+  const value = 3
   const [pickUpStation, setPickUpStation] = useState<{
     id: string;
     name?: string;
@@ -375,7 +375,19 @@ function ShippingAndPayment() {
               h="54px"
               isLoading={loading}
             >
-              Mua hàng (7)
+              %{"Mua hàng {value.name}"}
+              {/* {
+                intl.formatMessage(
+                  {
+                    id: '',
+                    description: '', 
+                    defaultMessage: 'Mua hàng {param}',
+                  },
+                  {
+                    param: value.name,
+                  } 
+                )
+              } */}
             </Button>
           </GridItem>
         </Grid>
