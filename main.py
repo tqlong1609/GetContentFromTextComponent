@@ -1,50 +1,10 @@
 import io
 import os
 import uuid
-
-def find_string(string,sub_string):
-	return string.find(sub_string)
-def formatTextNew(id, text):
-    textFm = '    "' + str(id) + '": ' + '"' + text + '"'
-    return textFm
-def formatString(string):
-    temp = string.lstrip()
-    if temp[len(temp)-1] == '\n':
-        temp = temp[:-1]
-    return temp
-
-def formatId(id):
-    textFm = '  "' + id + '": {'
-    return textFm
-
-def formatStringNew(index, string, file):
-    isCheck = False
-    isCheckId = True
-    id = ''
-    text = ''
-    for element in range(0, len(string)):
-        if string[element] == ':':
-            isCheckId = False
-        if isCheckId == True:
-            id+=string[element]
-        if string[element-1] == '"' and element+1 < len(string):
-            isCheck = True
-        if string[element] == ',' or string[element] == '"':
-            isCheck = False
-        if isCheck == True:
-            text+=string[element]
-    idFm = formatString(id)
-    if text != '':
-        textFm = formatString(text)
-        if index == 0:
-            file.write(formatId(textFm) + '\n')
-        else:
-            if index != 0 and index < 2:
-                file.write(formatTextNew(idFm, textFm) + ',\n')
-            else:
-                file.write(formatTextNew(idFm, textFm) + '\n')
-    else:
-        file.write(formatTextNew(idFm, "") + '\n')
+from time import sleep
+from tqdm import tqdm
+from googletrans import Translator
+translator = Translator()
 
 list_of_array_with_braces = ['%{"',"%{'","%{`"]
 list_of_array_without_braces = ['#{"',"#{'","#{`"]
@@ -56,11 +16,22 @@ VALUE_MIN_FORMAT = 3
 
 BRACE = '{'
 BRACE_CLOSE = '}'
-VALUE_PARAM_DEFINE = "{param}"
+VALUE_PARAM_DEFINE = "param"
 
-ARRAY_EXCEPT_STRING = ['.tsx','./src\\']
+ARRAY_EXCEPT_STRING = ['.tsx','./src\\','.js','.test']
+
+TAB_SPACE = "\t\t\t\t\t"
 
 MAX_UUID_LENGTH = 5
+
+LANGUAGE_ORIGIN = 'vi'
+
+def find_string(string,sub_string):
+	return string.find(sub_string)
+
+def formatJsonString(id, _defaultMessage):
+    defaultMessage = _defaultMessage.replace('$','')
+    return "\t\"{id}\":".format(id=id) + " {\n" + "\t\t\"defaultMessage\": \"{defaultMessage}\",\n".format(defaultMessage = defaultMessage) + "\t\t\"description\": \"\"\n" + "\t},\n" 
 
 def find_string_format(line):
     hasBraces = None
@@ -77,7 +48,8 @@ def find_string_format(line):
                 break
     return hasBraces
 
-def getTextValueAndParams(line):
+def getTextValueAndParams(_line):
+    line = _line.strip()
     hasValue = False
     arrValueParam = []
     indexStart = 0
@@ -92,7 +64,7 @@ def getTextValueAndParams(line):
             hasValue = False
             string_slice = line[indexStart+1:element]
             arrValueParam.append(string_slice)
-            textValue += VALUE_PARAM_DEFINE
+            textValue += "{" + VALUE_PARAM_DEFINE + str(len(arrValueParam)) + "}"
     return [textValue, arrValueParam]
 
 def getFilePathFormatted(filePath):
@@ -101,31 +73,61 @@ def getFilePathFormatted(filePath):
         newFilePath = newFilePath.replace(element, '')
     return newFilePath.replace('\\',"-")
 
-def getId(filePath):
-    filePathFormatted = getFilePathFormatted(filePath)
-    idRandom = str(uuid.uuid4())[:MAX_UUID_LENGTH]
-    return filePathFormatted + "-" + idRandom
+def getTextFormat (id, defaultMessage, arrParams):
+    data = TAB_SPACE + "intl.formatMessage({\n" + TAB_SPACE + "id: \"{id}\",\n".format(id=id) + TAB_SPACE + "defaultMessage: \"{defaultMessage}\",\n".format(defaultMessage=defaultMessage) + TAB_SPACE + "description: \"\"\n" + TAB_SPACE + "}"
+    dataParam = ""
+    if len(arrParams) > 0:
+        for idx, param in enumerate(arrParams):
+            dataParam += ",\n" + TAB_SPACE + "{\n" + TAB_SPACE + "param{index}".format(index = idx + 1) + ": {param}\n".format(param=param) + TAB_SPACE + "}"
+    return data + dataParam + ")"
 
-def readFile(reader, id):
+def readFile(file, reader, nameFile, fileWriteJsonEn, fileWriteJsonVi):
+    global count
+    filePathFormatted = getFilePathFormatted(file)
     line = reader.readline()
+    readerWrite = io.open("./output/"+nameFile, 'w', encoding="utf-8")
     while line != '':
         typeBraces = find_string_format(line)
         if typeBraces != None:
             data = getTextValueAndParams(line)
-            textValue = data[0]
-            arrValueParam = data[1]
-            print(id)
-            print(textValue)
-            print(arrValueParam)
-            print('------')
+            idRandom = str(uuid.uuid4())[:MAX_UUID_LENGTH]
+            id = filePathFormatted + "-" + idRandom
+            textFormat = getTextFormat(id, data[0], data[1])
+
+            # write output
+            if typeBraces == VALUE_WITH_BRACES:
+                readerWrite.write(TAB_SPACE+"{\n")
+                readerWrite.write(textFormat+"\n")
+                readerWrite.write(TAB_SPACE+"}\n")
+            else:
+                readerWrite.write(textFormat+"\n")
+            
+            # write en.json file
+            stringJsonFormatEn = formatJsonString(id, data[0])
+            fileWriteJsonEn.write(stringJsonFormatEn)
+
+            # write vi.json file
+            textVi = translator.translate(data[0], dest=LANGUAGE_ORIGIN).text
+            stringJsonFormatVi = formatJsonString(id, textVi)
+            fileWriteJsonVi.write(stringJsonFormatVi)
+        else:
+            readerWrite.write(line)
         line = reader.readline()
+    readerWrite.close()
 
 if __name__ == '__main__':
+    fileWriteJsonEn = io.open('en.json', 'w', encoding="utf-8")
+    fileWriteJsonVi = io.open('vi.json', 'w', encoding="utf-8")
+    fileWriteJsonEn.write("{\n")
+    fileWriteJsonVi.write("{\n")
     for root, dirs, files in os.walk('./src', topdown=False):
-        for name in files:
+        for name in tqdm(files):
             file = os.path.join(root, name)
-            id = getId(file)
             reader = io.open(file, 'r', encoding="utf-8")
-            readFile(reader,id)
+            readFile(file, reader, name, fileWriteJsonEn, fileWriteJsonVi)
             reader.close()
+    fileWriteJsonEn.write("}")
+    fileWriteJsonVi.write("}")
+    fileWriteJsonEn.close()
+    fileWriteJsonVi.close()
 
