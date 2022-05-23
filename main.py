@@ -31,7 +31,7 @@ def find_string(string,sub_string):
 
 def formatJsonString(id, _defaultMessage):
     defaultMessage = _defaultMessage.replace('$','')
-    return "\t\"{id}\":".format(id=id) + " {\n" + "\t\t\"defaultMessage\": \"{defaultMessage}\",\n".format(defaultMessage = defaultMessage) + "\t\t\"description\": \"\"\n" + "\t},\n" 
+    return "\t\"{id}\": ".format(id=id) + "\"{defaultMessage}\",\n".format(defaultMessage=_defaultMessage)
 
 def find_string_format(line):
     hasBraces = None
