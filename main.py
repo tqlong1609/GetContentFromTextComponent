@@ -26,6 +26,8 @@ MAX_UUID_LENGTH = 5
 
 LANGUAGE_ORIGIN = 'vi'
 
+PATH_OUTPUT = "./output/"
+
 def find_string(string,sub_string):
 	return string.find(sub_string)
 
@@ -81,11 +83,29 @@ def getTextFormat (id, defaultMessage, arrParams):
             dataParam += ",\n" + TAB_SPACE + "{\n" + TAB_SPACE + "param{index}".format(index = idx + 1) + ": {param}\n".format(param=param) + TAB_SPACE + "}"
     return data + dataParam + ")"
 
+def getFolderPath (file, nameFile):
+    newFolderPath = file
+    newFolderPath = newFolderPath.replace(nameFile,'')
+    for element in ARRAY_EXCEPT_STRING:
+        newFolderPath = newFolderPath.replace(element, '')
+    newFolderPath = newFolderPath.replace('\\',"/")
+    if newFolderPath == "":
+        return PATH_OUTPUT
+    else:
+        return PATH_OUTPUT + newFolderPath
+
+def generateFolder(folderPath):
+    if folderPath != PATH_OUTPUT and os.path.exists(folderPath) == False:
+        os.makedirs(folderPath)
+
 def readFile(file, reader, nameFile, fileWriteJsonEn, fileWriteJsonVi):
-    global count
     filePathFormatted = getFilePathFormatted(file)
+
+    folderPath = getFolderPath(file, nameFile)
+    generateFolder(folderPath)
+
     line = reader.readline()
-    readerWrite = io.open("./output/"+nameFile, 'w', encoding="utf-8")
+    readerWrite = io.open(folderPath + nameFile, 'w', encoding="utf-8")
     while line != '':
         typeBraces = find_string_format(line)
         if typeBraces != None:
