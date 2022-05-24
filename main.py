@@ -1,5 +1,5 @@
 import io
-import os
+import os, shutil
 import uuid
 from time import sleep
 from tqdm import tqdm
@@ -98,17 +98,25 @@ def generateFolder(folderPath):
     if folderPath != PATH_OUTPUT and os.path.exists(folderPath) == False:
         os.makedirs(folderPath)
 
+def resetFolder(dir):
+    for files in os.listdir(dir):
+        path = os.path.join(dir, files)
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            os.remove(path)
+            
 def readFile(file, reader, nameFile, fileWriteJsonEn, fileWriteJsonVi):
     filePathFormatted = getFilePathFormatted(file)
 
-    folderPath = getFolderPath(file, nameFile)
-    generateFolder(folderPath)
-
     line = reader.readline()
-    readerWrite = io.open(folderPath + nameFile, 'w', encoding="utf-8")
+    
+    textContent = ""
+    isReader = False
     while line != '':
         typeBraces = find_string_format(line)
         if typeBraces != None:
+            isReader = True
             data = getTextValueAndParams(line)
             idRandom = str(uuid.uuid4())[:MAX_UUID_LENGTH]
             id = filePathFormatted + "-" + idRandom
@@ -116,11 +124,11 @@ def readFile(file, reader, nameFile, fileWriteJsonEn, fileWriteJsonVi):
 
             # write output
             if typeBraces == VALUE_WITH_BRACES:
-                readerWrite.write(TAB_SPACE+"{\n")
-                readerWrite.write(textFormat+"\n")
-                readerWrite.write(TAB_SPACE+"}\n")
+                textContent = textContent + TAB_SPACE + "{\n"
+                textContent = textContent + textFormat + "\n"
+                textContent = textContent + TAB_SPACE + "}\n"
             else:
-                readerWrite.write(textFormat+"\n")
+                textContent = textContent + textFormat + "\n"
             
             # write en.json file
             stringJsonFormatEn = formatJsonString(id, data[0])
@@ -131,21 +139,31 @@ def readFile(file, reader, nameFile, fileWriteJsonEn, fileWriteJsonVi):
             stringJsonFormatVi = formatJsonString(id, textVi)
             fileWriteJsonVi.write(stringJsonFormatVi)
         else:
-            readerWrite.write(line)
+            textContent = textContent + line
         line = reader.readline()
-    readerWrite.close()
+
+    if isReader == True:
+        folderPath = getFolderPath(file, nameFile)
+        generateFolder(folderPath)
+        readerWrite = io.open(folderPath + nameFile, 'w', encoding="utf-8")
+        readerWrite.write(textContent)
+        readerWrite.close()
 
 if __name__ == '__main__':
+    resetFolder('./output')
+
     fileWriteJsonEn = io.open('en.json', 'w', encoding="utf-8")
     fileWriteJsonVi = io.open('vi.json', 'w', encoding="utf-8")
     fileWriteJsonEn.write("{\n")
     fileWriteJsonVi.write("{\n")
+
     for root, dirs, files in os.walk('./src', topdown=False):
         for name in tqdm(files):
             file = os.path.join(root, name)
             reader = io.open(file, 'r', encoding="utf-8")
             readFile(file, reader, name, fileWriteJsonEn, fileWriteJsonVi)
             reader.close()
+
     fileWriteJsonEn.write("}")
     fileWriteJsonVi.write("}")
     fileWriteJsonEn.close()
